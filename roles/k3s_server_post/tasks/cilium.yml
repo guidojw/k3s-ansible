@@ -163,11 +163,15 @@
         {% endif %}
         --version "{{ cilium_tag }}"
         --helm-set operator.replicas="1"
-        {{ '--helm-set devices=' + cilium_iface if cilium_iface != 'auto' else '' }}
-        --helm-set ipam.operator.clusterPoolIPv4PodCIDRList={{ cluster_cidr }}
+        --helm-set devices=ens18+
+        --helm-set ipam.operator.clusterPoolIPv4PodCIDRList={{ cluster_ipv4_cidr }}
+        --helm-set ipam.operator.clusterPoolIPv6PodCIDRList={{ cluster_ipv6_cidr }}
+        --helm-set ipam.operator.clusterPoolIPv6MaskSize={{ cluster_ipv6_mask_size | default("104") }}
         {% if cilium_routing_mode == "native" or (cilium_bgp and cilium_exportPodCIDR != 'false') %}
-        --helm-set ipv4NativeRoutingCIDR={{ cluster_cidr }}
+        --helm-set ipv4NativeRoutingCIDR={{ cluster_ipv4_cidr }}
+        --helm-set ipv6NativeRoutingCIDR={{ cluster_ipv6_cidr }}
         {% endif %}
+        --helm-set ipv6.enabled={{ cilium_ipv6 | default("false") }}
         --helm-set k8sServiceHost="127.0.0.1"
         --helm-set k8sServicePort="6444"
         --helm-set routingMode={{ cilium_routing_mode }}
@@ -183,6 +187,7 @@
         --helm-set loadBalancer.algorithm={{ bpf_lb_algorithm }}
         --helm-set loadBalancer.mode={{ bpf_lb_mode }}
         {% endif %}
+      #{{ '--helm-set devices=' + cilium_iface if cilium_iface != 'auto' else '' }}
       environment:
         KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
       register: cilium_install_result
